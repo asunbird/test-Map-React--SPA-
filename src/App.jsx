@@ -77,18 +77,24 @@ export default function App() {
     setIsLoadingShelters(true);
     
     // List of mirror servers in case one is down or overloaded (504/429)
+    // Expanded list of reliable mirror servers around the world
     const mirrors = [
       'https://overpass-api.de/api/interpreter',
       'https://lz4.overpass-api.de/api/interpreter',
-      'https://z.overpass-api.de/api/interpreter'
+      'https://z.overpass-api.de/api/interpreter',
+      'https://overpass.kumi.systems/api/interpreter',
+      'https://overpass.osm.ch/api/interpreter',
+      'https://overpass.nchc.org.tw/api/interpreter'
     ];
 
     let lastError = null;
 
     for (const url of mirrors) {
+      // Small 500ms delay between retries to give the next mirror a clean start
+      if (lastError) await new Promise(resolve => setTimeout(resolve, 500));
+      
       try {
-        const radius = 30000; // Updated to 30km
-        // Broaden query to include nwr (node, way, relation) and use 'out center'
+        const radius = 30000; // 30km
         const overpassQuery = `
           [out:json][timeout:25];
           nwr["amenity"="animal_shelter"](around:${radius},${lat},${lon});
@@ -112,7 +118,7 @@ export default function App() {
         const elements = data.elements || [];
         
         if (elements.length === 0) {
-           console.warn("No shelters found in this 30km radius.");
+           console.warn(`No shelters found near ${lat}, ${lon} within 30km`);
         }
 
         setShelters(elements);
@@ -120,14 +126,14 @@ export default function App() {
         return; 
 
       } catch (err) {
-        console.warn(`Mirror ${url} failed:`, err.message);
+        console.warn(`Mirror ${url} failed, trying next...:`, err.message);
         lastError = err;
       }
     }
 
     setIsLoadingShelters(false);
     if (lastError) {
-      alert("Overpass servers are currently struggling. Please try again or search a different area.");
+      alert("All Overpass servers are currently struggling due to high traffic. Please try again in about 1 minute.");
     }
   };
 
