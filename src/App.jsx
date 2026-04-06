@@ -47,7 +47,15 @@ export default function App() {
       const data = await resp.json();
       if (data && data.length > 0) {
         const { lat, lon } = data[0];
-        const centerArr = [parseFloat(lat), parseFloat(lon)];
+        const latNum = parseFloat(lat);
+        const lonNum = parseFloat(lon);
+        
+        if (isNaN(latNum) || isNaN(lonNum)) {
+          alert("Could not determine coordinates for this location.");
+          return;
+        }
+
+        const centerArr = [latNum, lonNum];
         setInitialMapCenter(centerArr);
         
         if (map) {
@@ -55,7 +63,7 @@ export default function App() {
         }
         
         // Always fetch shelters, even if map is not mounted yet
-        fetchShelters(parseFloat(lat), parseFloat(lon));
+        fetchShelters(latNum, lonNum);
         setHasSearched(true);
       } else {
         alert("Location not found!");
@@ -177,6 +185,7 @@ export default function App() {
             {/* Leaflet Map Background */}
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
               <MapContainer 
+                key={initialMapCenter.join(',')}
                 center={initialMapCenter} 
                 zoom={13} 
                 zoomControl={false} 
