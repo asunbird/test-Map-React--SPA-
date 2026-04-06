@@ -87,12 +87,12 @@ export default function App() {
 
     for (const url of mirrors) {
       try {
-        const radius = 5000;
-        // Added [timeout:25] to the query to ensure the server doesn't hang
+        const radius = 10000; // Increased to 10km for better range
+        // Broaden query to include nwr (node, way, relation) and use 'out center'
         const overpassQuery = `
           [out:json][timeout:25];
-          node["amenity"="animal_shelter"](around:${radius},${lat},${lon});
-          out body;
+          nwr["amenity"="animal_shelter"](around:${radius},${lat},${lon});
+          out center;
         `;
         
         const response = await fetch(url, {
@@ -105,31 +105,30 @@ export default function App() {
         });
 
         if (!response.ok) {
-          if (response.status === 429) {
-            throw new Error("Too Many Requests");
-          }
-          if (response.status === 504) {
-            throw new Error("Gateway Timeout");
-          }
           throw new Error(`Status ${response.status}`);
         }
 
         const data = await response.json();
-        setShelters(data.elements || []);
+        const elements = data.elements || [];
+        
+        if (elements.length === 0) {
+           console.warn("No shelters found in this 10km radius.");
+        }
+
+        setShelters(elements);
         setIsLoadingShelters(false);
-        return; // Success! Exit the function
+        return; 
 
       } catch (err) {
         console.warn(`Mirror ${url} failed:`, err.message);
         lastError = err;
-        // Continue to the next mirror...
       }
     }
 
-    // If we get here, all mirrors failed
-    console.error("All Overpass mirrors failed:", lastError);
-    alert(`Could not load map data: The Overpass servers are currently overwhelmed. Please try again in 30 seconds.`);
     setIsLoadingShelters(false);
+    if (lastError) {
+      alert("Overpass servers are currently struggling. Please try again or search a different area.");
+    }
   };
 
 
@@ -176,8 +175,14 @@ export default function App() {
               const email = tags['contact:email'] || tags.email;
               const openingHours = tags.opening_hours;
 
+              // Support both nodes (direct lat/lon) and ways/relations (center property)
+              const lat = shelter.lat || (shelter.center && shelter.center.lat);
+              const lon = shelter.lon || (shelter.center && shelter.center.lon);
+
+              if (!lat || !lon) return null;
+
               return (
-                <Marker key={shelter.id} position={[shelter.lat, shelter.lon]}>
+                <Marker key={shelter.id} position={[lat, lon]}>
                   <Popup>
                     <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-main)', fontSize: '1.1rem' }}>{name}</h3>
                     {website && (
@@ -208,6 +213,13 @@ export default function App() {
               );
             })}
           </MapContainer>
+          
+          {/* Status Message for empty results */}
+          {!isLoadingShelters && shelters.length === 0 && (
+            <div style={{ position: 'absolute', top: '100px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, background: 'rgba(255,255,255,0.9)', padding: '10px 20px', borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', fontWeight: 'bold', color: '#666' }}>
+              No shelters found in this area (10km radius)
+            </div>
+          )}
         </div>
 
         {/* UI Overlay */}
