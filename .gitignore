@@ -7,10 +7,22 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Node / Build Outputs
 node_modules
 dist
 dist-ssr
-*.local
+
+# Environment Variables (CRUCIAL for API Keys)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Netlify
+.netlify
+netlify/functions/**/*.zip
+netlify-cli*
 
 # Editor directories and files
 .vscode/*
