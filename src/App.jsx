@@ -87,7 +87,7 @@ export default function App() {
 
     for (const url of mirrors) {
       try {
-        const radius = 10000; // Increased to 10km for better range
+        const radius = 30000; // Updated to 30km
         // Broaden query to include nwr (node, way, relation) and use 'out center'
         const overpassQuery = `
           [out:json][timeout:25];
@@ -112,7 +112,7 @@ export default function App() {
         const elements = data.elements || [];
         
         if (elements.length === 0) {
-           console.warn("No shelters found in this 10km radius.");
+           console.warn("No shelters found in this 30km radius.");
         }
 
         setShelters(elements);
@@ -217,7 +217,7 @@ export default function App() {
           {/* Status Message for empty results */}
           {!isLoadingShelters && shelters.length === 0 && (
             <div style={{ position: 'absolute', top: '100px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, background: 'rgba(255,255,255,0.9)', padding: '10px 20px', borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', fontWeight: 'bold', color: '#666' }}>
-              No shelters found in this area (10km radius)
+              No shelters found in this area (30km radius)
             </div>
           )}
         </div>
