@@ -23,9 +23,7 @@ export default function App() {
   const [shelters, setShelters] = useState([]);
   const [isLoadingShelters, setIsLoadingShelters] = useState(false);
 
-  // Phase 4: RescueGroups Data
-  const [shelterPets, setShelterPets] = useState(null);
-  const [isLoadingPets, setIsLoadingPets] = useState(false);
+
 
   const handleZoomIn = () => {
     if (map) map.zoomIn();
@@ -99,27 +97,7 @@ export default function App() {
     }
   };
 
-  // Phase 4: RescueGroups API call to Netlify Proxy
-  const checkPetsForShelter = async (lat, lon) => {
-    setIsLoadingPets(true);
-    setShelterPets(null); // reset prior
-    try {
-      const res = await fetch('/.netlify/functions/rescue-groups-proxy', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ lat: lat, lon: lon, radius: 10 })
-      });
-      if (!res.ok) throw new Error("API request failed");
-      const result = await res.json();
-      setShelterPets(result.data || []);
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setIsLoadingPets(false);
-    }
-  };
+
 
   return (
     <>
@@ -155,23 +133,45 @@ export default function App() {
             />
             
             {/* Render overpass markers */}
-            {shelters.map((shelter) => (
-              <Marker key={shelter.id} position={[shelter.lat, shelter.lon]}>
-                <Popup onOpen={() => checkPetsForShelter(shelter.lat, shelter.lon)}>
-                  <strong>{shelter.tags.name || 'Unknown Shelter'}</strong>
-                  <br/>
-                  {isLoadingPets ? (
-                    <p style={{ margin: '5px 0', fontStyle: 'italic' }}>Loading pets...</p>
-                  ) : shelterPets ? (
-                    <p style={{ margin: '5px 0', color: 'var(--primary-accent)', fontWeight: 'bold' }}>
-                      {shelterPets.length} adoptable pets nearby!
-                    </p>
-                  ) : (
-                    <p style={{ margin: '5px 0' }}>Click to load pets</p>
-                  )}
-                </Popup>
-              </Marker>
-            ))}
+            {shelters.map((shelter) => {
+              const tags = shelter.tags || {};
+              const name = tags.name || 'Unknown Shelter';
+              const website = tags['contact:website'] || tags.website;
+              const phone = tags['contact:phone'] || tags.phone;
+              const email = tags['contact:email'] || tags.email;
+              const openingHours = tags.opening_hours;
+
+              return (
+                <Marker key={shelter.id} position={[shelter.lat, shelter.lon]}>
+                  <Popup>
+                    <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-main)', fontSize: '1.1rem' }}>{name}</h3>
+                    {website && (
+                      <p style={{ margin: '4px 0' }}>
+                        <strong>Website:</strong>{' '}
+                        <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">
+                          {website}
+                        </a>
+                      </p>
+                    )}
+                    {phone && (
+                      <p style={{ margin: '4px 0' }}>
+                        <strong>Phone:</strong> <a href={`tel:${phone}`}>{phone}</a>
+                      </p>
+                    )}
+                    {email && (
+                      <p style={{ margin: '4px 0' }}>
+                        <strong>Email:</strong> <a href={`mailto:${email}`}>{email}</a>
+                      </p>
+                    )}
+                    {openingHours && (
+                      <p style={{ margin: '4px 0' }}>
+                        <strong>Hours:</strong> {openingHours}
+                      </p>
+                    )}
+                  </Popup>
+                </Marker>
+              );
+            })}
           </MapContainer>
         </div>
 
