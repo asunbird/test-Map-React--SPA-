@@ -4,14 +4,13 @@ import 'leaflet/dist/leaflet.css';
 import './index.css';
 // Fix for default marker icon in leaflet with bundler
 import L from 'leaflet';
-import icon from 'leaflet/dist/images/marker-icon.png';
-import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+import pawIcon from './assets/paw-point.png';
 
 let DefaultIcon = L.icon({
-    iconUrl: icon,
-    shadowUrl: iconShadow,
-    iconSize: [25, 41],
-    iconAnchor: [12, 41]
+    iconUrl: pawIcon,
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
 });
 L.Marker.prototype.options.icon = DefaultIcon;
 
