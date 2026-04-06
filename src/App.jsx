@@ -16,6 +16,7 @@ L.Marker.prototype.options.icon = DefaultIcon;
 
 export default function App() {
   const [hasSearched, setHasSearched] = useState(false);
+  const [initialMapCenter, setInitialMapCenter] = useState([51.505, -0.09]);
   const [map, setMap] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -46,11 +47,15 @@ export default function App() {
       const data = await resp.json();
       if (data && data.length > 0) {
         const { lat, lon } = data[0];
+        const centerArr = [parseFloat(lat), parseFloat(lon)];
+        setInitialMapCenter(centerArr);
+        
         if (map) {
-          map.flyTo([parseFloat(lat), parseFloat(lon)], 13);
-          // Auto-fetch shelters upon traveling to new city
-          fetchShelters(parseFloat(lat), parseFloat(lon));
+          map.flyTo(centerArr, 13);
         }
+        
+        // Always fetch shelters, even if map is not mounted yet
+        fetchShelters(parseFloat(lat), parseFloat(lon));
         setHasSearched(true);
       } else {
         alert("Location not found!");
@@ -172,7 +177,7 @@ export default function App() {
             {/* Leaflet Map Background */}
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
               <MapContainer 
-                center={[51.505, -0.09]} 
+                center={initialMapCenter} 
                 zoom={13} 
                 zoomControl={false} 
                 style={{ width: '100%', height: '100%' }}
