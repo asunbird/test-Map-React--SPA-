@@ -243,29 +243,30 @@ export default function App() {
           
           {/* Status Message for empty results */}
           {!isLoadingShelters && shelters.length === 0 && (
-            <div className="status-message" style={{ position: 'absolute', top: '100px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, background: 'rgba(255,255,255,0.9)', padding: '10px 20px', borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', fontWeight: 'bold', color: '#666' }}>
+            <div className="status-message">
               No shelters found in this area (30km radius)
             </div>
           )}
         </div>
 
         {/* UI Overlay */}
-        <section id="map" style={{ pointerEvents: 'none', position: 'relative', zIndex: 2, background: 'transparent' }}>
+        <section id="map" style={{ pointerEvents: 'none' }}>
             <div id="map-control" style={{ pointerEvents: 'auto' }}>
-                <input id="plus" type="button" value="+" onClick={handleZoomIn} />
-                <input id="minus" type="button" value="-" onClick={handleZoomOut} />
+                <button className="map-btn" onClick={handleZoomIn}>+</button>
+                <button className="map-btn" onClick={handleZoomOut}>-</button>
                 
                 {/* Search in this area button */}
                 <button 
+                  className="map-btn search-area-btn"
                   onClick={() => fetchShelters()} 
                   disabled={isLoadingShelters}
-                  style={{ width: '80px', minHeight: '40px', fontSize: '12px', marginTop: '10px', marginLeft: '-20px', cursor: 'pointer' }}>
+                >
                   {isLoadingShelters ? '...' : 'Search Area'}
                 </button>
             </div>
             
             <div id="map-close" style={{ pointerEvents: 'auto' }}>
-                <input id="close" type="button" value="x" />
+                <button className="map-btn">x</button>
             </div>
         </section>
       </main>
