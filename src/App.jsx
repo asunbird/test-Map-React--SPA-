@@ -192,7 +192,7 @@ export default function App() {
               if (!lat || !lon) return null;
 
               return (
-                <Marker key={shelter.id} position={[lat, lon]}>
+                <Marker key={shelter.id} position={[lat, lon]} icon={DefaultIcon}>
                   <Popup>
                     <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-main)', fontSize: '1.1rem' }}>{name}</h3>
                     {address && (
