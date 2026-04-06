@@ -211,19 +211,31 @@ footer {
 
 .pulse-button-hint {
   display: inline-block;
-  padding: 12px 24px;
-  background: var(--primary-accent);
-  color: white;
-  border-radius: 30px;
+  color: transparent;
+  -webkit-text-stroke: 1px var(--primary-accent);
+  font-size: 1.2rem;
   font-weight: bold;
-  animation: pulse 2s infinite;
-  box-shadow: 0 5px 15px rgba(242, 172, 172, 0.4);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  animation: strokePulse 2s infinite ease-in-out;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); box-shadow: 0 5px 15px rgba(242, 172, 172, 0.4); }
-  50% { transform: scale(1.05); box-shadow: 0 5px 25px rgba(242, 172, 172, 0.6); }
-  100% { transform: scale(1); box-shadow: 0 5px 15px rgba(242, 172, 172, 0.4); }
+@keyframes strokePulse {
+  0% { 
+    -webkit-text-stroke-color: var(--primary-accent);
+    text-shadow: 0 0 0px var(--primary-accent);
+    transform: scale(1);
+  }
+  50% { 
+    -webkit-text-stroke-color: var(--secondary-accent);
+    text-shadow: 0 0 10px var(--secondary-accent);
+    transform: scale(1.05);
+  }
+  100% { 
+    -webkit-text-stroke-color: var(--primary-accent);
+    text-shadow: 0 0 0px var(--primary-accent);
+    transform: scale(1);
+  }
 }
 
 footer {
