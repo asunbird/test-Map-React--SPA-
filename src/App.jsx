@@ -174,6 +174,12 @@ export default function App() {
               const phone = tags['contact:phone'] || tags.phone;
               const email = tags['contact:email'] || tags.email;
               const openingHours = tags.opening_hours;
+              
+              // Extract address information if available
+              const street = tags['addr:street'];
+              const houseNum = tags['addr:housenumber'];
+              const city = tags['addr:city'];
+              const address = [houseNum, street, city].filter(Boolean).join(' ');
 
               // Support both nodes (direct lat/lon) and ways/relations (center property)
               const lat = shelter.lat || (shelter.center && shelter.center.lat);
@@ -185,6 +191,12 @@ export default function App() {
                 <Marker key={shelter.id} position={[lat, lon]}>
                   <Popup>
                     <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-main)', fontSize: '1.1rem' }}>{name}</h3>
+                    {address && (
+                      <p style={{ margin: '4px 0', color: '#666', fontSize: '0.9rem' }}>
+                        {address}
+                      </p>
+                    )}
+                    <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px solid #eee' }} />
                     {website && (
                       <p style={{ margin: '4px 0' }}>
                         <strong>Website:</strong>{' '}
@@ -208,6 +220,16 @@ export default function App() {
                         <strong>Hours:</strong> {openingHours}
                       </p>
                     )}
+                    <div style={{ marginTop: '12px', borderTop: '1px solid #eee', paddingTop: '8px', textAlign: 'center' }}>
+                      <a 
+                        href={`https://www.openstreetmap.org/${shelter.type}/${shelter.id}`} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        style={{ fontSize: '0.75rem', color: '#999', textDecoration: 'none' }}
+                      >
+                        ℹ️ View or Edit on OpenStreetMap
+                      </a>
+                    </div>
                   </Popup>
                 </Marker>
               );
