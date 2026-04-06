@@ -75,42 +75,61 @@ export default function App() {
     }
 
     setIsLoadingShelters(true);
-    try {
-      // 5000m radius around the specified lat/lon
-      const radius = 5000;
-      const overpassQuery = `
-        [out:json];
-        node["amenity"="animal_shelter"](around:${radius},${lat},${lon});
-        out body;
-      `;
-      
-      // Use POST request to avoid URL length/encoding issues and rate limits on GET
-      const url = `https://overpass-api.de/api/interpreter`;
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          'Accept': 'application/json'
-        },
-        body: `data=${encodeURIComponent(overpassQuery)}`
-      });
+    
+    // List of mirror servers in case one is down or overloaded (504/429)
+    const mirrors = [
+      'https://overpass-api.de/api/interpreter',
+      'https://lz4.overpass-api.de/api/interpreter',
+      'https://z.overpass-api.de/api/interpreter'
+    ];
 
-      if (!response.ok) {
-        if (response.status === 429) {
-          throw new Error("Overpass API is currently busy (Too Many Requests). Please try again in a moment.");
+    let lastError = null;
+
+    for (const url of mirrors) {
+      try {
+        const radius = 5000;
+        // Added [timeout:25] to the query to ensure the server doesn't hang
+        const overpassQuery = `
+          [out:json][timeout:25];
+          node["amenity"="animal_shelter"](around:${radius},${lat},${lon});
+          out body;
+        `;
+        
+        const response = await fetch(url, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'Accept': 'application/json'
+          },
+          body: `data=${encodeURIComponent(overpassQuery)}`
+        });
+
+        if (!response.ok) {
+          if (response.status === 429) {
+            throw new Error("Too Many Requests");
+          }
+          if (response.status === 504) {
+            throw new Error("Gateway Timeout");
+          }
+          throw new Error(`Status ${response.status}`);
         }
-        throw new Error(`Overpass API blocked or failed with status: ${response.status}`);
-      }
 
-      const data = await response.json();
-      setShelters(data.elements || []);
-    } catch(err) {
-      console.error("Overpass Fetch Error:", err);
-      // Only alert if it's not an abort error, provide a clearer message
-      alert(`Could not load map data: ${err.message || "Network Error"}`);
-    } finally {
-      setIsLoadingShelters(false);
+        const data = await response.json();
+        setShelters(data.elements || []);
+        setIsLoadingShelters(false);
+        return; // Success! Exit the function
+
+      } catch (err) {
+        console.warn(`Mirror ${url} failed:`, err.message);
+        lastError = err;
+        // Continue to the next mirror...
+      }
     }
+
+    // If we get here, all mirrors failed
+    console.error("All Overpass mirrors failed:", lastError);
+    alert(`Could not load map data: The Overpass servers are currently overwhelmed. Please try again in 30 seconds.`);
+    setIsLoadingShelters(false);
   };
 
 
