@@ -25,18 +25,21 @@ html, body, #root {
 
 header {
     width: 100%;
-    height: 80px;
+    min-height: 80px;
     background-color: var(--highlight-peach);
     position: sticky;
     top: 0;
     z-index: 2;
     box-sizing: border-box;
-    padding: 0 32px;
+    padding: 10px 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
 }
 
 main {
     width: 100%;
-    height: 80%;
+    height: calc(100vh - 140px); /* Adjust for header and footer */
     background-color: var(--bg-base);
     border: var(--text-main) 1px solid;
     box-sizing: border-box;
@@ -49,22 +52,50 @@ main {
     flex-direction: row;
     justify-content: space-between;
     align-items: flex-start;
-    padding: 32px;
+    padding: 20px;
     box-sizing: border-box;
+}
+
+#map-view-form {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+    margin-left: 20px;
+    max-width: 600px;
+}
+
+#map-view-form input {
+    flex: 1;
+    padding: 8px;
+    font-size: 16px;
+    border-radius: 4px;
+    border: 1px solid #ccc;
+    min-width: 0; /* Prevents overflow in flexbox */
+}
+
+#map-view-form button {
+    padding: 8px 16px;
+    font-size: 16px;
+    background: var(--highlight-lavender);
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    white-space: nowrap;
 }
 
 #map-control {
     width: 40px;
-    height: 90px;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     gap: 10px;
 }
 #map-control input {
-    width: 100%;
+    width: 40px;
     height: 40px;
-    font-size: 32px;
+    font-size: 24px;
+    cursor: pointer;
 }
 
 #map-close {
@@ -75,7 +106,8 @@ main {
 #map-close input {
     width: 100%;
     height: 40px;
-    font-size: 32px;
+    font-size: 24px;
+    cursor: pointer;
 }
 
 footer {
@@ -84,5 +116,52 @@ footer {
     background-color: var(--primary-accent);
     position: fixed;
     bottom: 0;
+    z-index: 2;
 }
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    header {
+        flex-direction: column;
+        height: auto;
+        padding: 15px;
+        gap: 10px;
+    }
+
+    #map-view-form {
+        margin-left: 0;
+        width: 100%;
+        max-width: 100%;
+    }
+
+    main {
+        height: calc(100vh - 180px); /* More space for stacked header */
+    }
+
+    #map {
+        padding: 10px;
+    }
+
+    #map-control {
+        gap: 5px;
+    }
+
+    #map-control input, #map-close input {
+        width: 35px;
+        height: 35px;
+        font-size: 20px;
+    }
+
+    h2 {
+        font-size: 1.2rem;
+    }
+
+    /* Adjust the status message for small screens */
+    .status-message {
+        width: 80%;
+        font-size: 0.8rem !important;
+        top: 80px !important;
+    }
+}
+
 

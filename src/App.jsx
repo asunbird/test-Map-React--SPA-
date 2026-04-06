@@ -141,23 +141,22 @@ export default function App() {
 
   return (
     <>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-        <h2 style={{ margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>Find Animal Shelter</h2>
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', flex: 1, marginLeft: '30px', maxWidth: '600px' }}>
+      <header>
+        <h2>Find Animal Shelter</h2>
+        <form id="map-view-form" onSubmit={handleSearch}>
           <input 
             type="text" 
             placeholder="Search city (e.g. London)" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ flex: 1, padding: '8px', fontSize: '16px', borderRadius: '4px', border: '1px solid #ccc' }}
           />
-          <button type="submit" disabled={isSearching} style={{ padding: '8px 24px', fontSize: '16px', background: 'var(--highlight-lavender)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
+          <button type="submit" disabled={isSearching}>
             {isSearching ? '...' : 'Go'}
           </button>
         </form>
       </header>
       
-      <main style={{ position: 'relative' }}>
+      <main>
         {/* Leaflet Map Background */}
         <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
           <MapContainer 
@@ -244,7 +243,7 @@ export default function App() {
           
           {/* Status Message for empty results */}
           {!isLoadingShelters && shelters.length === 0 && (
-            <div style={{ position: 'absolute', top: '100px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, background: 'rgba(255,255,255,0.9)', padding: '10px 20px', borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', fontWeight: 'bold', color: '#666' }}>
+            <div className="status-message" style={{ position: 'absolute', top: '100px', left: '50%', transform: 'translateX(-50%)', zIndex: 10, background: 'rgba(255,255,255,0.9)', padding: '10px 20px', borderRadius: '20px', boxShadow: '0 2px 10px rgba(0,0,0,0.1)', fontWeight: 'bold', color: '#666' }}>
               No shelters found in this area (30km radius)
             </div>
           )}
@@ -260,7 +259,7 @@ export default function App() {
                 <button 
                   onClick={() => fetchShelters()} 
                   disabled={isLoadingShelters}
-                  style={{ width: '80px', height: '40px', fontSize: '12px', marginTop: '10px', marginLeft: '-20px', cursor: 'pointer' }}>
+                  style={{ width: '80px', minHeight: '40px', fontSize: '12px', marginTop: '10px', marginLeft: '-20px', cursor: 'pointer' }}>
                   {isLoadingShelters ? '...' : 'Search Area'}
                 </button>
             </div>
