@@ -64,7 +64,7 @@ export default function App() {
 
   // Phase 2: Overpass QL Shelter Fetching
   const fetchShelters = async (lat, lon) => {
-    if (!lat || !lon) {
+    if (lat === undefined || lon === undefined) {
       if (map) {
         const center = map.getCenter();
         lat = center.lat;
@@ -83,15 +83,31 @@ export default function App() {
         node["amenity"="animal_shelter"](around:${radius},${lat},${lon});
         out body;
       `;
-      // We use the public overpass-api interpreter.
-      const url = `https://overpass-api.de/api/interpreter?data=${encodeURIComponent(overpassQuery)}`;
-      const response = await fetch(url);
-      const data = await response.json();
       
+      // Use POST request to avoid URL length/encoding issues and rate limits on GET
+      const url = `https://overpass-api.de/api/interpreter`;
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Accept': 'application/json'
+        },
+        body: `data=${encodeURIComponent(overpassQuery)}`
+      });
+
+      if (!response.ok) {
+        if (response.status === 429) {
+          throw new Error("Overpass API is currently busy (Too Many Requests). Please try again in a moment.");
+        }
+        throw new Error(`Overpass API blocked or failed with status: ${response.status}`);
+      }
+
+      const data = await response.json();
       setShelters(data.elements || []);
     } catch(err) {
-      console.error(err);
-      alert("Failed to fetch shelters layer");
+      console.error("Overpass Fetch Error:", err);
+      // Only alert if it's not an abort error, provide a clearer message
+      alert(`Could not load map data: ${err.message || "Network Error"}`);
     } finally {
       setIsLoadingShelters(false);
     }
