@@ -123,17 +123,17 @@ export default function App() {
 
   return (
     <>
-      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '0 20px' }}>
-        <h2 style={{ margin: 0, color: 'var(--text-main)' }}>Paws Care Map</h2>
-        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px' }}>
+      <header style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <h2 style={{ margin: 0, color: 'var(--text-main)', whiteSpace: 'nowrap' }}>Find Animal Shelter</h2>
+        <form onSubmit={handleSearch} style={{ display: 'flex', gap: '10px', flex: 1, marginLeft: '30px', maxWidth: '600px' }}>
           <input 
             type="text" 
             placeholder="Search city (e.g. London)" 
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            style={{ padding: '8px', fontSize: '16px', borderRadius: '4px', border: '1px solid #ccc' }}
+            style={{ flex: 1, padding: '8px', fontSize: '16px', borderRadius: '4px', border: '1px solid #ccc' }}
           />
-          <button type="submit" disabled={isSearching} style={{ padding: '8px 16px', fontSize: '16px', background: 'var(--highlight-lavender)', border: 'none', borderRadius: '4px', cursor: 'pointer' }}>
+          <button type="submit" disabled={isSearching} style={{ padding: '8px 24px', fontSize: '16px', background: 'var(--highlight-lavender)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontWeight: 'bold' }}>
             {isSearching ? '...' : 'Go'}
           </button>
         </form>
@@ -150,7 +150,7 @@ export default function App() {
             ref={setMap}
           >
             <TileLayer
-              url="https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png"
+              url={`https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=${import.meta.env.VITE_STADIA_MAPS_KEY || ''}`}
               attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
             />
             
