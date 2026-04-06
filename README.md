@@ -1,16 +1,10 @@
-# React + Vite
+# Animal Shelter Map SPA
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
-
-Currently, two official plugins are available:
-
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
-
-## React Compiler
-
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
-
-## Expanding the ESLint configuration
-
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### 🌍 Data & Smart Logic
+The app uses a **multi-layered API strategy** to provide global coverage without a backend:
+1. **Nominatim (OSM)**: Instantly geocodes your city searches into coordinates.
+2. **Overpass QL**: A custom query language that finds real animal shelters
+(`amenity=animal_shelter`) directly from OpenStreetMap data.
+3. **RescueGroups API**: Fetches live adoptable pet data.
+4. **Netlify Serverless Functions**: Acts as a secure proxy to store your API keys safely
+while the app remains a front-end SPA.
