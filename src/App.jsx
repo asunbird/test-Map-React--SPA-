@@ -15,6 +15,7 @@ let DefaultIcon = L.icon({
 L.Marker.prototype.options.icon = DefaultIcon;
 
 export default function App() {
+  const [hasSearched, setHasSearched] = useState(false);
   const [map, setMap] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [isSearching, setIsSearching] = useState(false);
@@ -50,6 +51,7 @@ export default function App() {
           // Auto-fetch shelters upon traveling to new city
           fetchShelters(parseFloat(lat), parseFloat(lon));
         }
+        setHasSearched(true);
       } else {
         alert("Location not found!");
       }
@@ -156,120 +158,135 @@ export default function App() {
       </header>
       
       <main>
-        {/* Leaflet Map Background */}
-        <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
-          <MapContainer 
-            center={[51.505, -0.09]} 
-            zoom={13} 
-            zoomControl={false} 
-            style={{ width: '100%', height: '100%' }}
-            ref={setMap}
-          >
-            <TileLayer
-              url={`https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=${import.meta.env.VITE_STADIA_MAPS_KEY || ''}`}
-              attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
-            />
-            
-            {/* Render overpass markers */}
-            {shelters.map((shelter) => {
-              const tags = shelter.tags || {};
-              const name = tags.name || 'Unknown Shelter';
-              const website = tags['contact:website'] || tags.website;
-              const phone = tags['contact:phone'] || tags.phone;
-              const email = tags['contact:email'] || tags.email;
-              const openingHours = tags.opening_hours;
-              
-              // Extract address information if available
-              const street = tags['addr:street'];
-              const houseNum = tags['addr:housenumber'];
-              const city = tags['addr:city'];
-              const address = [houseNum, street, city].filter(Boolean).join(' ');
-
-              // Support both nodes (direct lat/lon) and ways/relations (center property)
-              const lat = shelter.lat || (shelter.center && shelter.center.lat);
-              const lon = shelter.lon || (shelter.center && shelter.center.lon);
-
-              if (!lat || !lon) return null;
-
-              return (
-                <Marker key={shelter.id} position={[lat, lon]} icon={DefaultIcon}>
-                  <Popup>
-                    <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-main)', fontSize: '1.1rem' }}>{name}</h3>
-                    {address && (
-                      <p style={{ margin: '4px 0', color: '#666', fontSize: '0.9rem' }}>
-                        {address}
-                      </p>
-                    )}
-                    <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px solid #eee' }} />
-                    {website && (
-                      <p style={{ margin: '4px 0' }}>
-                        <strong>Website:</strong>{' '}
-                        <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">
-                          {website}
-                        </a>
-                      </p>
-                    )}
-                    {phone && (
-                      <p style={{ margin: '4px 0' }}>
-                        <strong>Phone:</strong> <a href={`tel:${phone}`}>{phone}</a>
-                      </p>
-                    )}
-                    {email && (
-                      <p style={{ margin: '4px 0' }}>
-                        <strong>Email:</strong> <a href={`mailto:${email}`}>{email}</a>
-                      </p>
-                    )}
-                    {openingHours && (
-                      <p style={{ margin: '4px 0' }}>
-                        <strong>Hours:</strong> {openingHours}
-                      </p>
-                    )}
-                    <div style={{ marginTop: '12px', borderTop: '1px solid #eee', paddingTop: '8px', textAlign: 'center' }}>
-                      <a 
-                        href={`https://www.openstreetmap.org/${shelter.type}/${shelter.id}`} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        style={{ fontSize: '0.75rem', color: '#999', textDecoration: 'none' }}
-                      >
-                        ℹ️ View or Edit on OpenStreetMap
-                      </a>
-                    </div>
-                  </Popup>
-                </Marker>
-              );
-            })}
-          </MapContainer>
-          
-          {/* Status Message for empty results */}
-          {!isLoadingShelters && shelters.length === 0 && (
-            <div className="status-message">
-              No shelters found in this area (30km radius)
+        {!hasSearched ? (
+          <div className="welcome-screen">
+            <div className="welcome-content">
+              <div className="welcome-icon">🐾</div>
+              <h1>Find Animal Shelters Near You</h1>
+              <p>Enter a city name above to discover shelters, contact details, and adoption centers within 30km.</p>
+              <div className="pulse-button-hint">Use the search bar to get started</div>
             </div>
-          )}
-        </div>
-
-        {/* UI Overlay */}
-        <section id="map" style={{ pointerEvents: 'none' }}>
-            <div id="map-control" style={{ pointerEvents: 'auto' }}>
-                <button className="map-btn" onClick={handleZoomIn}>+</button>
-                <button className="map-btn" onClick={handleZoomOut}>-</button>
+          </div>
+        ) : (
+          <div className="map-view-container" style={{ width: '100%', height: '100%', position: 'relative' }}>
+            {/* Leaflet Map Background */}
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1 }}>
+              <MapContainer 
+                center={[51.505, -0.09]} 
+                zoom={13} 
+                zoomControl={false} 
+                style={{ width: '100%', height: '100%' }}
+                ref={setMap}
+              >
+                <TileLayer
+                  url={`https://tiles.stadiamaps.com/tiles/alidade_smooth/{z}/{x}/{y}{r}.png?api_key=${import.meta.env.VITE_STADIA_MAPS_KEY || ''}`}
+                  attribution='&copy; <a href="https://stadiamaps.com/">Stadia Maps</a>, &copy; <a href="https://openmaptiles.org/">OpenMapTiles</a> &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors'
+                />
                 
-                {/* Search in this area button */}
-                <button 
-                  className="map-btn search-area-btn"
-                  onClick={() => fetchShelters()} 
-                  disabled={isLoadingShelters}
-                >
-                  {isLoadingShelters ? '...' : 'Search Area'}
-                </button>
+                {/* Render overpass markers */}
+                {shelters.map((shelter) => {
+                  const tags = shelter.tags || {};
+                  const name = tags.name || 'Unknown Shelter';
+                  const website = tags['contact:website'] || tags.website;
+                  const phone = tags['contact:phone'] || tags.phone;
+                  const email = tags['contact:email'] || tags.email;
+                  const openingHours = tags.opening_hours;
+                  
+                  // Extract address information if available
+                  const street = tags['addr:street'];
+                  const houseNum = tags['addr:housenumber'];
+                  const city = tags['addr:city'];
+                  const address = [houseNum, street, city].filter(Boolean).join(' ');
+
+                  // Support both nodes (direct lat/lon) and ways/relations (center property)
+                  const lat = shelter.lat || (shelter.center && shelter.center.lat);
+                  const lon = shelter.lon || (shelter.center && shelter.center.lon);
+
+                  if (!lat || !lon) return null;
+
+                  return (
+                    <Marker key={shelter.id} position={[lat, lon]} icon={DefaultIcon}>
+                      <Popup>
+                        <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-main)', fontSize: '1.1rem' }}>{name}</h3>
+                        {address && (
+                          <p style={{ margin: '4px 0', color: '#666', fontSize: '0.9rem' }}>
+                            {address}
+                          </p>
+                        )}
+                        <hr style={{ margin: '8px 0', border: 'none', borderTop: '1px solid #eee' }} />
+                        {website && (
+                          <p style={{ margin: '4px 0' }}>
+                            <strong>Website:</strong>{' '}
+                            <a href={website.startsWith('http') ? website : `https://${website}`} target="_blank" rel="noopener noreferrer">
+                              {website}
+                            </a>
+                          </p>
+                        )}
+                        {phone && (
+                          <p style={{ margin: '4px 0' }}>
+                            <strong>Phone:</strong> <a href={`tel:${phone}`}>{phone}</a>
+                          </p>
+                        )}
+                        {email && (
+                          <p style={{ margin: '4px 0' }}>
+                            <strong>Email:</strong> <a href={`mailto:${email}`}>{email}</a>
+                          </p>
+                        )}
+                        {openingHours && (
+                          <p style={{ margin: '4px 0' }}>
+                            <strong>Hours:</strong> {openingHours}
+                          </p>
+                        )}
+                        <div style={{ marginTop: '12px', borderTop: '1px solid #eee', paddingTop: '8px', textAlign: 'center' }}>
+                          <a 
+                            href={`https://www.openstreetmap.org/${shelter.type}/${shelter.id}`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            style={{ fontSize: '0.75rem', color: '#999', textDecoration: 'none' }}
+                          >
+                            ℹ️ View or Edit on OpenStreetMap
+                          </a>
+                        </div>
+                      </Popup>
+                    </Marker>
+                  );
+                })}
+              </MapContainer>
+              
+              {/* Status Message for empty results */}
+              {!isLoadingShelters && shelters.length === 0 && (
+                <div className="status-message">
+                  No shelters found in this area (30km radius)
+                </div>
+              )}
             </div>
-            
-            <div id="map-close" style={{ pointerEvents: 'auto' }}>
-                <button className="map-btn">x</button>
-            </div>
-        </section>
+
+            {/* UI Overlay */}
+            <section id="map" style={{ pointerEvents: 'none' }}>
+                <div id="map-control" style={{ pointerEvents: 'auto' }}>
+                    <button className="map-btn" onClick={handleZoomIn}>+</button>
+                    <button className="map-btn" onClick={handleZoomOut}>-</button>
+                    
+                    {/* Search in this area button */}
+                    <button 
+                      className="map-btn search-area-btn"
+                      onClick={() => fetchShelters()} 
+                      disabled={isLoadingShelters}
+                    >
+                      {isLoadingShelters ? '...' : 'Search Area'}
+                    </button>
+                </div>
+                
+                <div id="map-close" style={{ pointerEvents: 'auto' }}>
+                    <button className="map-btn" onClick={() => setHasSearched(false)}>x</button>
+                </div>
+            </section>
+          </div>
+        )}
       </main>
-      <footer></footer>
+      <footer>
+        <p style={{ color: 'white', margin: 0, fontSize: '0.9rem' }}>© 2026 Paws Care Map — Saving lives one shelter at a time</p>
+      </footer>
     </>
   );
 }
