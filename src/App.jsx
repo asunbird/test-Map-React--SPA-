@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import './index.css';
@@ -23,6 +23,45 @@ export default function App() {
   
   const [shelters, setShelters] = useState([]);
   const [isLoadingShelters, setIsLoadingShelters] = useState(false);
+
+  const [favorites, setFavorites] = useState(() => {
+    const saved = localStorage.getItem('paws_favorites');
+    return saved ? JSON.parse(saved) : [];
+  });
+  const [showFavorites, setShowFavorites] = useState(false);
+
+  useEffect(() => {
+    localStorage.setItem('paws_favorites', JSON.stringify(favorites));
+  }, [favorites]);
+
+  const toggleFavorite = (shelter) => {
+    setFavorites(prev => {
+      const isFav = prev.some(f => f.id === shelter.id);
+      if (isFav) {
+        return prev.filter(f => f.id !== shelter.id);
+      } else {
+        return [...prev, shelter];
+      }
+    });
+  };
+
+  const isFavorite = (shelterId) => favorites.some(f => f.id === shelterId);
+
+  const goToFavorite = (shelter) => {
+    const lat = shelter.lat || (shelter.center && shelter.center.lat);
+    const lon = shelter.lon || (shelter.center && shelter.center.lon);
+    if (lat && lon) {
+      setInitialMapCenter([lat, lon]);
+      setHasSearched(true);
+      setShowFavorites(false);
+      // We set a small timeout to ensure the map re-renders if key changes or center updates
+      setTimeout(() => {
+        if (map) {
+          map.flyTo([lat, lon], 15);
+        }
+      }, 100);
+    }
+  };
 
 
 
@@ -156,22 +195,105 @@ export default function App() {
   return (
     <>
       <header>
-        <h2>Find Animal Shelter</h2>
-        <form id="map-view-form" onSubmit={handleSearch}>
-          <input 
-            type="text" 
-            placeholder="Search city (e.g. London)" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          <button type="submit" disabled={isSearching}>
-            {isSearching ? '...' : 'Go'}
+        <div className="header-top">
+          <h2>Find Animal Shelter</h2>
+          <button 
+            className={`fav-toggle-btn ${showFavorites ? 'active' : ''}`}
+            onClick={() => setShowFavorites(!showFavorites)}
+          >
+            {showFavorites ? 'Back to Map' : `Saved ❤️ (${favorites.length})`}
           </button>
-        </form>
+        </div>
+        {!showFavorites && (
+          <form id="map-view-form" onSubmit={handleSearch}>
+            <input 
+              type="text" 
+              placeholder="Search city (e.g. London)" 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            <button type="submit" disabled={isSearching}>
+              {isSearching ? '...' : 'Go'}
+            </button>
+          </form>
+        )}
       </header>
       
       <main>
-        {!hasSearched ? (
+        {showFavorites ? (
+          <div className="favorites-view">
+            <div className="favorites-header">
+              <h1>Saved Shelters</h1>
+              <button className="close-favs" onClick={() => setShowFavorites(false)}>×</button>
+            </div>
+            {favorites.length === 0 ? (
+              <div className="empty-favorites">
+                <div className="empty-icon">❤️</div>
+                <p>No shelters saved yet. Search for shelters on the map and click the heart icon to save them!</p>
+                <button onClick={() => setShowFavorites(false)} className="return-btn">Return to Map</button>
+              </div>
+            ) : (
+              <div className="favorites-grid">
+                {favorites.map(shelter => {
+                  const tags = shelter.tags || {};
+                  return (
+                    <div key={shelter.id} className="fav-card">
+                      <div className="fav-card-header">
+                        <h3>{tags.name || 'Unknown Shelter'}</h3>
+                        <button 
+                          className="heart-btn is-fav" 
+                          onClick={() => toggleFavorite(shelter)}
+                        >
+                          ❤️
+                        </button>
+                      </div>
+                      <p className="fav-address" style={{ marginBottom: '8px' }}>
+                        {[tags['addr:housenumber'], tags['addr:street'], tags['addr:city']].filter(Boolean).join(' ') || 'No address provided'}
+                      </p>
+                      
+                      <div className="fav-contacts" style={{ fontSize: '0.9rem', color: '#555', display: 'flex', flexDirection: 'column', gap: '4px', borderTop: '1px solid #eee', paddingTop: '8px', marginTop: '4px' }}>
+                        { (tags['contact:website'] || tags.website) && (
+                          <div style={{ wordBreak: 'break-all' }}>
+                            <strong>Website:</strong>{' '}
+                            <a href={(tags['contact:website'] || tags.website).startsWith('http') ? (tags['contact:website'] || tags.website) : `https://${tags['contact:website'] || tags.website}`} target="_blank" rel="noopener noreferrer">
+                              {(tags['contact:website'] || tags.website)}
+                            </a>
+                          </div>
+                        )}
+                        { (tags['contact:phone'] || tags.phone) && (
+                          <div>
+                            <strong>Phone:</strong> <a href={`tel:${tags['contact:phone'] || tags.phone}`}>{tags['contact:phone'] || tags.phone}</a>
+                          </div>
+                        )}
+                        { (tags['contact:email'] || tags.email) && (
+                          <div style={{ wordBreak: 'break-all' }}>
+                            <strong>Email:</strong>{' '}
+                            <form action={`mailto:${tags['contact:email'] || tags.email}`} method="POST" encType="text/plain" style={{ display: 'inline' }}>
+                              <button type="submit" className="email-link-btn">
+                                {tags['contact:email'] || tags.email}
+                              </button>
+                            </form>
+                          </div>
+                        )}
+                        {tags.opening_hours && (
+                          <div>
+                            <strong>Hours:</strong> {tags.opening_hours}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="fav-actions">
+                        <button className="view-on-map-btn" onClick={() => goToFavorite(shelter)}>
+                          View on Map
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        ) : !hasSearched ? (
           <div className="welcome-screen">
             <div className="welcome-content">
               <div className="welcome-icon">🐾</div>
@@ -221,7 +343,16 @@ export default function App() {
                   return (
                     <Marker key={shelter.id} position={[lat, lon]} icon={DefaultIcon}>
                       <Popup>
-                        <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-main)', fontSize: '1.1rem' }}>{name}</h3>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px' }}>
+                          <h3 style={{ margin: '0 0 8px 0', color: 'var(--text-main)', fontSize: '1.1rem' }}>{name}</h3>
+                          <button 
+                            className={`heart-btn ${isFavorite(shelter.id) ? 'is-fav' : ''}`}
+                            onClick={() => toggleFavorite(shelter)}
+                            title={isFavorite(shelter.id) ? "Remove from favorites" : "Add to favorites"}
+                          >
+                            ❤️
+                          </button>
+                        </div>
                         {address && (
                           <p style={{ margin: '4px 0', color: '#666', fontSize: '0.9rem' }}>
                             {address}
@@ -243,7 +374,12 @@ export default function App() {
                         )}
                         {email && (
                           <p style={{ margin: '4px 0' }}>
-                            <strong>Email:</strong> <a href={`mailto:${email}`}>{email}</a>
+                            <strong>Email:</strong>{' '}
+                            <form action={`mailto:${email}`} method="POST" encType="text/plain" style={{ display: 'inline' }}>
+                              <button type="submit" className="email-link-btn">
+                                {email}
+                              </button>
+                            </form>
                           </p>
                         )}
                         {openingHours && (
